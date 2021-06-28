@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Components
       Graph
       Lib
   other-modules:
@@ -34,6 +35,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , mtl
   default-language: Haskell2010
 
 executable oh-precedence-exe
@@ -46,6 +48,7 @@ executable oh-precedence-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , mtl
     , oh-precedence
   default-language: Haskell2010
 
@@ -60,5 +63,6 @@ test-suite oh-precedence-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , mtl
     , oh-precedence
   default-language: Haskell2010
