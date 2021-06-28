@@ -16,14 +16,14 @@ type DfsMonad = State DfsState
 initState :: DfsState
 initState = DfsState Map.empty Map.empty
 
-connectedComponents :: Graph -> Either String Components
-connectedComponents graph = checkEquivalence graph finalState
+connectedComponents :: Graph -> [Key] -> Either String Components
+connectedComponents graph keys = checkEquivalence graph finalState
   where
     loop [] = return ()
     loop (k:ks) = do
         dfsComponents graph k k
         loop ks
-    (_, finalState) = runState (loop $ Map.keys graph) initState
+    (_, finalState) = runState (loop keys) initState
 
 
 dfsComponents :: Graph -> Key -> Key -> DfsMonad ()

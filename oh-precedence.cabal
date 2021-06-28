@@ -28,6 +28,7 @@ library
       Components
       Graph
       Lib
+      LongestPath
   other-modules:
       Paths_oh_precedence
   hs-source-dirs:
