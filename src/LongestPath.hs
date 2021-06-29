@@ -1,10 +1,12 @@
 module LongestPath
     ( LongestPaths
     , findLongestPaths
+    , getLPath
     ) where
 
 import Graph
-import Control.Monad.State.Lazy (State, get, put, runState)
+import Control.Monad.State.Lazy (State, get, put, runState, when)
+import Components               (Components)
 
 import qualified Data.Map.Strict as Map
 
@@ -36,3 +38,6 @@ longestPathFrom graph v = do
             let lPath = 1 + foldr max 0 paths
             put $ Map.insert v lPath st
             return lPath
+
+getLPath :: LongestPaths -> Key -> Maybe Int
+getLPath = flip Map.lookup

@@ -29,6 +29,7 @@ library
       Graph
       Lib
       LongestPath
+      Parser
   other-modules:
       Paths_oh_precedence
   hs-source-dirs:

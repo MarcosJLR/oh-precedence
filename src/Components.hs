@@ -1,4 +1,8 @@
-module Components where
+module Components
+    ( Components
+    , getComponent
+    , connectedComponents
+    )where
 
 import Graph
 import Control.Monad.State.Lazy (State, get, put, runState)
@@ -60,3 +64,6 @@ checkEquivalence graph state = do
 
     mapM_ check $ Map.keys cmps
     return cmps
+
+getComponent :: Components -> Key -> Maybe Key
+getComponent = flip Map.lookup
