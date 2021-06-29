@@ -1,4 +1,7 @@
-module LongestPath where
+module LongestPath
+    ( LongestPaths
+    , findLongestPaths
+    ) where
 
 import Graph
 import Control.Monad.State.Lazy (State, get, put, runState)
