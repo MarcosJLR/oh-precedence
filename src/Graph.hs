@@ -8,7 +8,8 @@ module Graph
     , Graph.empty
     )where
 
-import Data.List (nub)
+import Data.List    (nub)
+import Precedence   (Precedence (..), Symbol, Token)
 import Data.Map.Strict as Map
 
 type Key = String

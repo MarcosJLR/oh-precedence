@@ -27,9 +27,9 @@ library
   exposed-modules:
       Components
       Graph
-      Lib
       LongestPath
       Parser
+      Precedence
   other-modules:
       Paths_oh_precedence
   hs-source-dirs:

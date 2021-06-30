@@ -50,18 +50,17 @@ checkEquivalence graph state = do
     let cmps = components state
     let szs = sizes state
     let check key = do
-        let mComp = Map.lookup key cmps
-        case mComp of
-            Nothing -> Left $ "Key " ++ key ++ " does not have component"
-            Just comp -> do
-                let mSize = Map.lookup comp szs
-                case mSize of
-                    Nothing -> Left $ "Component " ++ comp ++ " does not have size"
-                    Just sz ->
-                        if sz-1 == length (adjacencyList key graph)
-                        then return ()
-                        else Left $ "Key " ++ key ++ " does not connect to every node in its component"
-
+            let mComp = Map.lookup key cmps
+            case mComp of
+                Nothing -> Left $ "Key " ++ key ++ " does not have component"
+                Just comp -> do
+                    let mSize = Map.lookup comp szs
+                    case mSize of
+                        Nothing -> Left $ "Component " ++ comp ++ " does not have size"
+                        Just sz ->
+                            if sz-1 == length (adjacencyList key graph)
+                            then return ()
+                            else Left $ "Key " ++ key ++ " does not connect to every node in its component"
     mapM_ check $ Map.keys cmps
     return cmps
 

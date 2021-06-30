@@ -1,4 +1,10 @@
-module Parser where
+module Parser
+    ( Token
+    , Symbol
+    , Rules
+    , parse
+    , isNonTerminal
+    ) where
 
 import Data.Char                    (isUpper)
 import Data.Maybe                   (fromJust)
@@ -6,13 +12,10 @@ import Data.Map.Strict              (notMember)
 import Control.Monad.Writer.Lazy    (Writer, tell, when, unless)
 import Components                   (Components, getComponent)
 import LongestPath                  (LongestPaths, getLPath)
+import Precedence                   (Symbol, Rules, Token)
 
 import qualified Data.Map.Strict as Map
 
-
-type Token = String
-type Symbol = String
-type Rules = Map.Map Symbol Symbol
 
 type ParseMonad = Writer [String]
 
