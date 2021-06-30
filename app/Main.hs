@@ -20,6 +20,7 @@ data ReplState = ReplState
     , operators :: [Token]
     , components :: Components
     , lPaths :: LongestPaths
+    , parserBuilt :: Bool
     }
 
 type ReplMonad = StateT ReplState IO
@@ -27,11 +28,12 @@ type ReplMonad = StateT ReplState IO
 initialState :: ReplState
 initialState = ReplState
     { rules = Map.empty
-    , initial = undefined
+    , initial = ""
     , precedences = []
     , operators = []
     , components = Map.empty
     , lPaths = Map.empty
+    , parserBuilt = False
     }
 
 main :: IO ()
@@ -86,13 +88,13 @@ print' = liftIO . putStrLn
 
 
 enterRule :: [String] -> ReplMonad String
-enterRule [] = return "Rule must have at least right hand non-terminal"
+enterRule [] = return "ERROR: Rule must have at least right hand non-terminal"
 enterRule (nonTerm:rule)
-    | not (isNonTerminal nonTerm) = return "Right hand side must be a non-terminal"
-    | checkBad rule = return "Rule has two consecutive non-terminals"
+    | not (isNonTerminal nonTerm) = return "ERROR: Right hand side must be a non-terminal"
+    | checkBad rule = return "ERROR: Rule has two consecutive non-terminals"
     | otherwise = do
         st <- get
-        let strRule = nonTerm ++ " -> " ++ unwords rule
+        let strRule = if null rule then nonTerm ++ " -> λ" else nonTerm ++ " -> " ++ unwords rule
         let newRules = Map.insert (concat rule) nonTerm (rules st)
         put $ st {rules = newRules}
         return $ "Rule " ++ strRule ++ " has been added to grammar"
@@ -134,19 +136,27 @@ buildParser :: [String] -> ReplMonad String
 buildParser (_:_) = return "ERROR: BUILD command must be used without arguments"
 buildParser [] = do
     st <- get
-    let eqGraph = removeMultiedges $ buildEqGraph $ precedences st
-    let ops = operators st
-    let keys = map ('f':) ops ++ map ('g':) ops
-    case connectedComponents eqGraph keys of
-        Left err -> return $ "ERROR: " ++ err
-        Right comps -> do
-            let dag = removeMultiedges $ buildDag comps $ precedences st
-            let longest = findLongestPaths dag keys
-            liftIO $ print dag
-            put $ st {components = comps, lPaths = longest}
-            let fValues = unlines $ map (showValue comps longest "f") $ operators st
-            let gValues = unlines $ map (showValue comps longest "g") $ operators st
-            return $ unlines ["f-values:", fValues, "g-values", gValues]
+    if parserBuilt st
+    then return "ERROR: Parser has already been built"
+    else do
+        let eqGraph = removeMultiedges $ buildEqGraph $ precedences st
+        let ops = operators st
+        let keys = map ('f':) ops ++ map ('g':) ops
+        case connectedComponents eqGraph keys of
+            Left err -> return $ "ERROR: " ++ err
+            Right comps -> do
+                let dag = removeMultiedges $ buildDag comps $ precedences st
+                let longest = findLongestPaths dag keys
+                put $ st {components = comps, lPaths = longest, parserBuilt = True}
+                let fValues = unlines $ map (showValue comps longest "f") $ operators st
+                let gValues = unlines $ map (showValue comps longest "g") $ operators st
+                return $ unlines
+                    [ "Parser has been successfully built"
+                    , "f-values:"
+                    , fValues
+                    , "g-values"
+                    , gValues
+                    ]
   where
     showValue :: Components -> LongestPaths -> String -> Token -> String
     showValue comps longest fg tk = "- " ++ fg ++ "(" ++ tk ++ "): " ++ show value
@@ -157,10 +167,16 @@ buildParser [] = do
 useParser :: [String] -> ReplMonad String
 useParser tks = do
     st <- get
-    let init = initial st
-    let rs = rules st
-    let comps = components st
-    let longest = lPaths st
-    let (result, log) = runWriter $ parse init rs comps longest tks
-    return $ unlines log
+    if null (initial st)
+    then return "ERROR: Initial symbol hasn't been specified, please use INIT command"
+    else do
+        if not (parserBuilt st)
+        then return "ERROR: Parser has not been built yet, please use BUILD command"
+        else do
+            let init = initial st
+            let rs = rules st
+            let comps = components st
+            let longest = lPaths st
+            let (result, log) = runWriter $ parse init rs comps longest tks
+            return $ unlines log
 
