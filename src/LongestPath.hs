@@ -30,7 +30,7 @@ longestPathFrom graph v = do
     case mLPath of
         Just x ->
             if x == -1
-            then error "ERROR: A cycle has been found"
+            then error $ "ERROR: A cycle has been found " ++ v
             else return x
         Nothing -> do
             put $ Map.insert v (-1) st

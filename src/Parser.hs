@@ -51,8 +51,16 @@ parse initial rules comps lPaths input = do
                     return False
                 Just nonTerm -> do
                     tell ["Reduce with rule " ++ nonTerm ++ " -> " ++ rightRule]
+                    tell ["Stack: " ++ show (nonTerm : dropTerminals sz stack)]
+                    tell ["Real Stack: " ++ show (drop sz rStack)]
+                    tell ["Input: " ++ show inp]
+                    tell ["Size: " ++ show sz]
                     parse' (nonTerm : dropTerminals sz stack) (drop sz rStack) inp
-        | otherwise = parse' (currTk:stack) (currTk:rStack) rest
+        | otherwise = do
+            tell ["Stack: " ++ show (currTk : stack)]
+            tell ["Real Stack: " ++ show (currTk : rStack)]
+            tell ["Input: " ++ show rest]
+            parse' (currTk:stack) (currTk:rStack) rest
     parse' _ _ _ = do
         tell ["Phrase does not belong in the language"]
         return False
@@ -63,8 +71,8 @@ parse initial rules comps lPaths input = do
 
 takeWhile' :: (a -> a -> Bool) -> [a] -> [a]
 takeWhile' p (x:y:xs)
-    | p x y = [x]
-    | otherwise = x : takeWhile' p (y:xs)
+    | p x y = x : takeWhile' p (y:xs)
+    | otherwise = [x]
 takeWhile' _ xs = xs
 
 takeTerminals :: Int -> [Symbol] -> [Symbol]

@@ -40,7 +40,7 @@ dfsComponents graph root v = do
         Just _ -> return ()
         Nothing -> do
             let cmp' = Map.insert v root cmp
-            let sz' = Map.adjust (+1) root sz
+            let sz' = Map.insertWith (+) root 1 sz
             put $ st {components = cmp', sizes = sz'}
             let adj = adjacencyList v graph
             mapM_ (dfsComponents graph root) adj
