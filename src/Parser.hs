@@ -23,8 +23,8 @@ parse :: Symbol -> Rules -> Components -> LongestPaths -> [Token] -> ParseMonad 
 parse initial rules comps lPaths input = do
     let missing = filter (\k -> notMember ('f':k) comps || notMember ('g':k) comps) input
     let hasDollar = "$" `elem` input
-    unless (null missing) $ tell ["Tokens " ++ show missing ++ " were not defined"]
-    when hasDollar $ tell ["$ cannot be an input"]
+    unless (null missing) $ tell ["ERROR: Tokens " ++ show missing ++ " were not defined"]
+    when hasDollar $ tell ["ERROR: $ cannot be an input token"]
     if null missing && not hasDollar
     then parse' [] ["$"] (input ++ ["$"])
     else return False
@@ -32,14 +32,16 @@ parse initial rules comps lPaths input = do
     parse' :: [Symbol] -> [Token] -> [Token] -> ParseMonad Bool
     parse' stack rStack@(lastTk:_) inp@(currTk:rest)
         | lastTk == "$" && currTk == "$" = do
+            outputState
             if length stack == 1 && head stack == initial
             then do
-                tell ["Accept phrase"]
+                tell ["Action:          Accept phrase"]
                 return True
             else do
-                tell ["Phrase does not belong in the language"]
+                tell ["Action:          Reject phrase"]
                 return False
         | getF lastTk > getG currTk = do
+            outputState
             let cmpGeq = (\tk1 tk2 -> getF tk2 >= getG tk1)
             let sz = length $ takeWhile' cmpGeq rStack
             let rightRule = concat $ reverse $ takeTerminals sz stack
@@ -47,22 +49,24 @@ parse initial rules comps lPaths input = do
             case leftRule of
                 Nothing -> do
                     tell ["Phrase " ++ rightRule ++ " cannot be reduced"]
-                    tell ["Phrase does not belong in the language"]
+                    tell ["Action:          Reject phrase"]
                     return False
                 Just nonTerm -> do
-                    tell ["Reduce with rule " ++ nonTerm ++ " -> " ++ rightRule]
-                    tell ["Stack: " ++ show (nonTerm : dropTerminals sz stack)]
-                    tell ["Real Stack: " ++ show (drop sz rStack)]
-                    tell ["Input: " ++ show inp]
-                    tell ["Size: " ++ show sz]
+                    tell ["Action:          Reduce with rule " ++ nonTerm ++ " -> " ++ rightRule]
                     parse' (nonTerm : dropTerminals sz stack) (drop sz rStack) inp
         | otherwise = do
-            tell ["Stack: " ++ show (currTk : stack)]
-            tell ["Real Stack: " ++ show (currTk : rStack)]
-            tell ["Input: " ++ show rest]
+            outputState
+            tell ["Action:          Shift with " ++ currTk]
             parse' (currTk:stack) (currTk:rStack) rest
+      where
+        outputState :: ParseMonad ()
+        outputState = do
+            tell [replicate 30 '-']
+            tell ["Stack:           " ++ unwords (reverse stack)]
+            tell ["Processed input: " ++ unwords (reverse rStack)]
+            tell ["Input:           " ++ unwords inp]
     parse' _ _ _ = do
-        tell ["Phrase does not belong in the language"]
+        tell ["Action:          Reject phrase"]
         return False
     getF :: Token -> Int
     getF tk = fromJust $ getLPath lPaths $ fromJust $ getComponent comps $ 'f':tk
